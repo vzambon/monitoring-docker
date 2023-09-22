@@ -1,0 +1,74 @@
+services:
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    deploy:
+      replicas: 1
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - metrics
+    extra_hosts:
+    - "host.docker.internal:host-gateway"
+    labels:
+      org.label-schema.group: "monitoring"
+    restart: unless-stopped
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - 3000:3000
+    networks:
+      - metrics
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./grafana.ini:/etc/grafana/grafana.ini
+    labels:
+      org.label-schema.group: "monitoring"
+    restart: unless-stopped
+  node_exporter:
+    image: prom/node-exporter:latest
+    container_name: node_exporter
+    ports:
+      - 9100:9100
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - metrics
+    labels:
+      org.label-schema.group: "monitoring"
+    restart: unless-stopped
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    container_name: cadvisor
+    ports:
+      - 8080:8080
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+    networks:
+      - metrics
+    labels:
+      org.label-schema.group: "monitoring"
+    restart: unless-stopped
+volumes:
+  grafana-storage:
+    driver: local
+networks:
+  metrics:
+    driver: bridge

@@ -4,8 +4,8 @@ services:
     container_name: prometheus
     deploy:
       replicas: 1
-    ports:
-      - 9090:9090
+    expose:
+      - 9090
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
@@ -28,11 +28,11 @@ services:
     labels:
       org.label-schema.group: "monitoring"
     restart: unless-stopped
-  node_exporter:
+  node_exposeer:
     image: prom/node-exporter:latest
-    container_name: node_exporter
-    ports:
-      - 9100:9100
+    container_name: node_exposeer
+    expose:
+      - 9100
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -50,8 +50,8 @@ services:
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.47.2
     container_name: cadvisor
-    ports:
-      - 8080:8080
+    expose:
+      - 8080
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
